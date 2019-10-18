@@ -1,0 +1,1369 @@
+
+Chit 1:
+
+
+Use MySQL –( Joins and Subqueries)
+
+Create Customer and Account table and add rows shown below
+
+
+1. Show the cname, Acc_Type, amount information of customer who is having an saving account.
+
+
+
+2. Display the data using Natural, left and right join.
+3. Display the information of customers living in the same city as of „pooja‟.
+4. Display the information of account, having less amount than average amount throughout the bank.
+5. Display the C_id having maximum amount in account.
+6. Display the amount and acc_type of those customers whose amount is the minimum amount of that Acc_type.
+7. Display the amount of those accounts whose amount is higher than amount of any saving account amount.
+
+------------------------------------------------------------------------------------------------------------------
+set SERVEROUTPUT ON;
+declare
+rollno1 number;
+nob varchar(20);
+nodays number;
+idate date;
+cdate date;
+amount number;
+begin
+rollno1 := &rno;
+nob :='&nob';
+select DATEOFISSUE into idate from BORROWER where ROLLIN=rollno1 and NameofBook=nob;
+dbms_output.put_Line(idate);
+nodays:=SYSDATE -idate;
+dbms_output.put_Line(nodays);
+if(nodays > 15 and nodays < 30) then
+    amount:= nodays*5;
+elsif(nodays>=30) then
+    amount := nodays*50;
+else
+dbms_output.put_line('No Fine');
+end if;
+dbms_output.put_Line(amount);
+
+if (nodays >15) then
+ insert into FINE values(rollno1,SYSDATE,amount);
+ end if;
+update BORROWER set STATUS='R' where ROLLIN=rollno1 and NameofBook=nob;
+exception 
+WHEN NO_DATA_FOUND then
+    dbms_output.put_line('----------------NO DATA FOUND---------');
+WHEN OTHERS
+    THEN
+        dbms_output.put_line('Found');
+end;
+
+
+
+
+CHIT3:
+Unnamed PL/SQL code block: Use of Control structure and Exception handling is mandatory. Write a PL/SQL
+block of code for the following requirements:-Consider table Stud(Roll, Att,Status) Write a PL/SQL block for
+following requirement and handle the exceptions. Roll no. of student will be entered by user. Attendance of roll no.
+entered by user will be checked in Stud table. If attendance is less than 75% then display the message “Term not
+granted” and set the status in stud table as “D”. Otherwise display message “Term granted” and set the status in stud
+table as “ND” .
+
+
+
+
+SET SERVEROUTPUT ON
+DECLARE
+ROLLNUMBER NUMBER;
+ATTENDENCE NUMBER;
+BEGIN
+    ROLLNUMBER:=&rollno;
+  SELECT ATT INTO ATTENDENCE FROM STUDENT WHERE ROLL=ROLLNUMBER;
+    DBMS_OUTPUT.PUT_LINE('Rollno'||ROLLNUMBER);
+    DBMS_OUTPUT.PUT_LINE('Attendence'|| ATTENDENCE);
+    IF(ATTENDENCE<75)
+    THEN
+    DBMS_OUTPUT.PUT_LINE('TERM NOT GRANTED');
+     update STUDENT SET STATUS='D' WHERE ROLL=ROLLNUMBER;
+     ELSE
+      DBMS_OUTPUT.PUT_LINE('TERM GRANTED');
+      update STUDENT SET STATUS='ND' WHERE ROLL=ROLLNUMBER;
+    END IF;
+        
+end;
+
+
+
+Chit 4 Cursors: (Explicit, Cursor FOR Loop) on table N_RollCall (rollno,name,attendane_date)
+
+
+WORKSHEET:
+
+SET SERVEROUTPUT ON;
+DECLARE
+CURSOR C1 IS SELECT ROLL,ATT,STATUS FROM STUDENT;
+TEMP C1%ROWTYPE;
+BEGIN
+DBMS_OUTPUT.PUT_LINE('INSIDE BEGIN');
+FOR TEMP IN C1
+LOOP
+DBMS_OUTPUT.PUT_LINE('ROLL NUMBER:'||TEMP.ROLL);
+END LOOP;
+END;
+
+
+Chit 5 Cursors: (Implicit and Explicit Cursor). Write a PL/SQL block of code using parameterized Cursor that will merge the data available in the newly created table N_RollCall with the data available in the table O_RollCall. If the data in the first table already exist in the second table then that data should be skipped. 
+
+BEGIN
+MERGE INTO NEWTABLE
+    USING OLDTABLE
+    ON (NEWTABLE.ROLLNO1 = OLDTABLE.ROLLNO)
+   WHEN NOT MATCHED THEN
+    INSERT (ROLLNO1) VALUES (OLDTABLE.ROLLNO);
+IF SQL%FOUND THEN
+	dbms_output.put_line('MERGED');
+	END IF;
+	IF SQL%NOTFOUND THEN
+		dbms_output.put_line('NOT MERGED');
+	END IF;	
+	IF SQL%ROWCOUNT>0 THEN
+		dbms_output.put_line(SQL%ROWCOUNT||' Rows Updated');
+	ELSE
+		dbms_output.put_line('NO Rows Updated Found');
+	END IF;
+END;
+
+
+Chit 6 PL/SQL Stored Procedure. Write a Stored Procedure namely proc_Grade for the categorization of student. If marks scored by students in examination is <=1500 and marks>=990 then student will be placed in distinction category if marks scored are between 989 and900 category is first class, if marks 899 and 825 category is Higher Second Class Write a PL/SQL block for using procedure created with above requirement. Stud_Marks(name, total_marks) Result(Roll,Name, Class).
+
+
+WORKSHEET:
+CREATE OR REPLACE PROCEDURE PROCEDURE1 AS 
+MARKS NUMBER;
+ROLLNUMBER NUMBER;
+NAME1 VARCHAR(20);
+CLASS1 VARCHAR(50);
+CURSOR C1 IS SELECT ROLL,NAME,TOTAL_MARKS FROM STUD_MARKS;
+BEGIN
+OPEN C1;
+    LOOP
+        FETCH C1 INTO ROLLNUMBER,NAME1,MARKS;
+        EXIT WHEN C1%NOTFOUND;
+            IF(MARKS>=990 AND MARKS<=1500)
+            THEN
+                CLASS1:='DIST';
+            ELSIF(MARKS>=900 AND MARKS<=989)
+            THEN
+                CLASS1:='FIRST CLASS';
+            ELSIF(MARKS>=825 AND MARKS<=899)
+            THEN
+                CLASS1:='HIGHER';
+            ELSE
+                CLASS1:='PASS';
+            END IF;
+            INSERT INTO RESULT VALUES(ROLLNUMBER,NAME1,CLASS1);
+    END LOOP;
+
+  NULL;
+END PROCEDURE1;
+
+
+
+Chit 7 PL/SQL Stored Function. Write a Stored Procedure namely proc_Grade for the categorization of student. If marks scored by students in examination is <=1500 and marks>=990 then student will be placed in distinction category if marks scored are between 989 and900 category is first class, if marks 899 and 825 category is Higher Second Class Write a PL/SQL block for using procedure created with above requirement. Stud_Marks(name, total_marks) Result(Roll,Name, Class). 
+
+CREATE OR REPLACE FUNCTION MYFUN 
+(
+  RNO IN NUMBER ) RETURN VARCHAR AS 
+   FM NUMBER;
+BEGIN
+    SELECT TOTAL_MARKS INTO FM FROM STUD_MARKS WHERE ROLL = RNO;
+   IF (FM <=1500 AND FM >=990) THEN 
+   RETURN 'DIST';
+   ELSIF (FM <=989 AND FM>=890) THEN 
+       RETURN 'FC';
+      ELSIF (FM <=889 AND FM>=800) THEN
+          RETURN 'HSC' ;
+        ELSE 
+          RETURN 'PASS';
+     END IF;
+  
+END MYFUN;
+
+
+RUN:
+(worksheet)
+
+set serveroutput on;
+declare
+rno number;
+marks1 number;
+name1 varchar(20);
+grade varchar(45);
+cursor c3 is select roll,name,total_marks from stud_marks;
+begin
+open c3;
+loop
+fetch c3 into rno,name1,marks1;
+EXIT when c3%notfound; 
+select myfun(rno) into grade from dual;
+insert into result values(rno,name1,grade);
+end loop;
+end;
+
+
+
+Chit 9
+(USE MYSQL )
+student(S_ID,name,dept_name,tot_cred)
+instructor(T_ID,name,dept_name,salary)
+course(course_id,title,dept_name,credits)
+i. Find the average salary of instructor in those departments where the average salary is more than Rs. 42000/-.
+ii. Increase the salary of each instructor in the computer department by 10%.
+iii. Find the names of instructors whose names are neither “Amol” nor “Amit”.
+iv. Find the names of student which contains “am” as its substring.
+v. Find the name of students from computer department that “DBMS” courses they take.
+
+
+1.select dept_name , avg(salary) from instructor group by(dept_name) having avg(salary) > 42000;
+
+2.update instructor set salary=salary+(salary*10/100) where dept_name='comp';
+
+3.select * from instructor where name <>'Amol'and name <> 'Amit';
+
+4.select * from student where name like '%am%';
+
+5.select name from student INNER JOIN course USING (dept_name)
+    -> where student.dept_name='Comp'and title = 'DBMS';
+
+
+//////change or extra task///////////
+
+create table student2(s_id int,msg varchar(20),constraint fk Foreign key(s_id) references student1(s_id) ON DELETE CASCADE ON UPDATE CASCADE);
+
+
+
+
+
+Chit 10
+teaches(T_ID, course_id, sec_id, semester, year)
+student(S_ID, name, dept_name, tot_cred)
+instructor(T_ID, name, dept_name, salary)
+course(course_id, title, dept_name, credits)
+i. Find the names of the instructor in the university who have taught the courses semester wise.
+ii.Create View on single table which retrieves student details.
+iii.Rename the column of table student from dept_name to deptatrment_name
+iv.Delete student name whose department is NULL
+
+
+mysql> create table  teaches(T_ID int,course_id int,sec_id int,semester int,year int);
+Query OK, 0 rows affected (0.19 sec)
+
+mysql> create table students(S_ID int,name varchar(20),dept_name varchar(20),tot_cred int);
+Query OK, 0 rows affected (0.81 sec)
+
+mysql> 
+mysql> create table instructor(T_ID int,name varchar(20),dept_name varchar(20),salary int);
+Query OK, 0 rows affected (0.24 sec)
+
+mysql> create table course(course_id int,title varchar(20),dept_name varchar(20),credits int);
+Query OK, 0 rows affected (0.22 sec)
+
+mysql> select * from students;
++------+-------+-----------+----------+
+| S_ID | name  | dept_name | tot_cred |
++------+-------+-----------+----------+
+|    2 | stud1 | comp      |       25 |
+|    3 | stud2 | mech      |       25 |
+|    4 | stud3 | comp      |       25 |
++------+-------+-----------+----------+
+3 rows in set (0.00 sec)
+
+mysql> select * from instructor;
++------+------+-----------+--------+
+| T_ID | name | dept_name | salary |
++------+------+-----------+--------+
+|    1 | abc  | comp      |  90000 |
+|    1 | abc1 | comp      |  90000 |
+|    1 | abc2 | comp      |  90000 |
+|    1 | abc3 | mech      |  80000 |
++------+------+-----------+--------+
+4 rows in set (0.00 sec)
+
+mysql> select * from course;
++-----------+---------+-----------+---------+
+| course_id | title   | dept_name | credits |
++-----------+---------+-----------+---------+
+|        11 | course1 | mech      |       5 |
+|        12 | course1 | mech      |       5 |
+|        13 | course3 | comp      |       5 |
++-----------+---------+-----------+---------+
+3 rows in set (0.00 sec)
+
+mysql> select * from teaches;
++------+-----------+--------+----------+------+
+| T_ID | course_id | sec_id | semester | year |
++------+-----------+--------+----------+------+
+|    1 |        11 |     99 |        5 | 2015 |
+|    2 |        11 |     99 |        5 | 2015 |
++------+-----------+--------+----------+------+
+2 rows in set (0.00 sec)
+
+i. Find the names of the instructor in the university who have taught the courses semester wise.
+mysql> select i.T_ID from instructor i,teaches t where i.T_ID=t.T_ID;
++------+
+| T_ID |
++------+
+|    1 |
+|    1 |
+|    1 |
+|    1 |
+|    2 |
++------+
+5 rows in set (0.02 sec)
+
+ii.Create View on single table which retrieves student details.
+mysql> create view s1 as select * from students;
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> select * from s1;
++------+-------+-----------+----------+
+| S_ID | name  | dept_name | tot_cred |
++------+-------+-----------+----------+
+|    2 | stud1 | comp      |       25 |
+|    3 | stud2 | mech      |       25 |
+|    4 | stud3 | comp      |       25 |
++------+-------+-----------+----------+
+3 rows in set (0.00 sec)
+
+
+iii.Rename the column of table student from dept_name to deptatrment_name
+mysql> insert into students(S_ID,name,tot_cred) values(04,'stud3',25);
+Query OK, 1 row affected (0.54 sec)
+
+mysql> ALTER TABLE students  CHANGE COLUMN name sname varchar(20) NOT NULL;
+Query OK, 3 rows affected (0.62 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+
+iv.Delete student name whose department is NULL
+mysql> select * from students;
++------+-------+-----------+----------+
+| S_ID | name  | dept_name | tot_cred |
++------+-------+-----------+----------+
+|    2 | stud1 | comp      |       25 |
+|    3 | stud2 | mech      |       25 |
+|    4 | stud3 | comp      |       25 |
+|    4 | stud3 | NULL      |       25 |
++------+-------+-----------+----------+
+4 rows in set (0.00 sec)
+
+mysql> delete from students where dept_name is NULL;
+Query OK, 1 row affected (0.04 sec)
+
+mysql> select * from students;
++------+-------+-----------+----------+
+| S_ID | name  | dept_name | tot_cred |
++------+-------+-----------+----------+
+|    2 | stud1 | comp      |       25 |
+|    3 | stud2 | mech      |       25 |
+|    4 | stud3 | comp      |       25 |
++------+-------+-----------+----------+
+3 rows in set (0.00 sec)
+
+
+
+
+Chit 11 Database Trigger (Row level, Before Trigger). Write a database trigger on Library table. The System should keep track of the records that are being updated or deleted. The old value of updated or deleted records should be added in Library_Audit table.
+
+create or replace TRIGGER TRIGGER_LIB
+AFTER INSERT OR UPDATE ON LIBRARY_DATA 
+REFERENCING OLD AS OLD NEW AS NEW 
+FOR EACH ROW 
+BEGIN
+  INSERT INTO AUDITED_DATA VALUES (:OLD.BOOKID ,:OLD.BOOKNAME ,SYSDATE);
+  
+END;
+
+
+
+
+Chit 13
+Collection “movies“ which contains the documents given as below {
+
+name: “Movie1”,
+type: “action”,
+budget:1000000
+producer:{
+
+name: “producer1”,
+address:”PUNE”
+}
+
+}
+
+INSERT MORE THAN 10 DOCUMENTS HAVING ABOVE FORMAT
+
+
+> use mock;
+
+> db.createCollection('movie');
+
+> db.movie.insert([{name:'movie1',type:'action',budget:20000,producer:{name:'producer1',address:'pune'}}]);
+
+	
+> db.movie.insert([{name:'movie2',type:'action',budget:200000,producer:{name:'producer2',address:'nashik'}}]);
+
+	
+
+> db.movie.insert([{name:'movie3',type:'action',budget:2000000,producer:{name:'producer3',address:'nashik'}}]);
+
+> db.movie.insert([{name:'movie4',type:'action',budget:2500000,producer:{name:'producer4',address:'delhi'}}]);
+
+> db.movie.insert([{name:'movie5',type:'action',budget:2600000,producer:{name:'producer5',address:'mumbai'}}]);
+
+> db.movie.insert([{name:'movie6',type:'action',budget:2700000,producer:{name:'producer6',address:'konkan'}}]);
+
+
+
+i. Find the name of the movie having budget greater than 2,00,000.
+
+> db.movie.find({budget:{$gt:200000}},{name:1}).pretty();
+
+{ "_id" : ObjectId("5da7e50dbefcfbb3c4aa2511"), "name" : "movie3" }
+{ "_id" : ObjectId("5da7e53bbefcfbb3c4aa2512"), "name" : "movie4" }
+{ "_id" : ObjectId("5da7e54bbefcfbb3c4aa2513"), "name" : "movie5" }
+{ "_id" : ObjectId("5da7e55dbefcfbb3c4aa2514"), "name" : "movie6" }
+
+
+> db.movie.find({budget:{$gt:200000}},{_id:0,name:1}).pretty();
+
+{ "name" : "movie3" }
+{ "name" : "movie4" }
+{ "name" : "movie5" }
+
+	
+
+ii. Find the name of producer who lives in Pune
+
+> db.movie.find({'producer.address':'pune'},{_id:0,'producer.name':1}).pretty();
+
+{ "producer" : { "name" : "producer1" } }
+
+iii. Update the type of movie “action” to “horror”
+
+db.movie.update({'type':'action'},{$set:{'type':'horror'}},{multi:true});
+
+iv. Find all the documents produced by name “producer1” with their address
+
+> db.movie.find({'producer.name':'producer1'},{_id:0,'producer.address':1}).pretty();
+{ "producer" : { "address" : "pune" } }
+Chit 14
+Consider following structure for Mongodb collection and write a query for following requirements in Mongodb
+Teachers (Tname,dno,Experience,Salary,Data_of_Joining)
+Department (Dno,Dname)
+Students(Sname,Roll_No,Class)
+1. Write a query to create above collection insert some sample documents.
+2. Find the information about all teachers of Dno=2 and having salary greater than or equal to 10,000/-
+3. Find the student information having Roll_no=2 or Sname='xyz'
+4. Update student name whose Roll_No=5
+5. Delete all student whose Class is 'FE'
+6. Find information of Teachers whose Experience is more than 10 years
+7. Apply index on Students Collection
+
+
+
+2. Find the information about all teachers of Dno=2 and having salary greater than or equal to 10,000/-
+
+> db.Teachers.find({$and:[{dno:2},{Salary:{$gt:2000}}]}).pretty();
+
+3. Find the student information having Roll_no=2 or Sname='xyz'
+
+> db.Students.find({$and:[{Roll_no:2},{Sname:'abc'}]}).pretty();
+
+4. Update student name whose Roll_No=5
+
+> db.Students.update({Roll_no:3},{$set:{Sname:'xyz'}});
+
+> db.Students.update({Roll_no:3},{$set:{Sname:'xyz'}},{multi:true});
+
+> db.Students.update({Roll_no:7},{$set:{Sname:'xyz'}},{upsert:true});
+
+
+
+5. Delete all student whose Class is 'FE'
+
+> db.Students.remove({Class:'TE'});
+
+
+6. Find information of Teachers whose Experience is more than 10 years
+
+> db.Teachers.find({Exp:{$gt:2}}).pretty();
+
+7. Apply index on Students Collection
+
+
+> db.Students.createIndex({Roll_no:1});
+
+
+> db.Students.dropIndex({Roll_no:1});
+
+
+
+Chit 15
+Use MongoDB
+Create Institute Database and Create Student collection
+1. RollNo 2. Student Name 3. Age 4. Branch 5. Address :{ City, State} 6. Hobbies (Array)
+Perform following operations
+1. Create database Institute.
+2. Create collection Students.
+3. Insert 10 documents with above mentioned structure.
+4. Display all students‟ information.
+5. Display Student information whose age is greater than 15.
+6. Display Student information sorted on name field
+7. Update student branch Computer of RollNo 3.
+8. Remove document with RollNo 1
+9. Display Student information whose name starts with A
+10. Display the total numbers of documents available in collection.
+11. Display only first 5 documents.
+12. Display all documents instead of first 3.
+13. Display the name of Students who live in Pune City.
+14. Display the list of different cities from where students are coming.
+15. Display the list of different cities with number of students from belonging to that city.
+16. Display only Name of all students.
+17. Display the hobbies of each student.
+18. Drop Collection
+
+
+
+1. Create database Institute.
+> use institute;
+
+2. Create collection Students.
+	> db.createCollection("Student");
+
+	3. Insert 10 documents with above mentioned structure.
+db.Student.insert([{Rollno:1,Name:"Gauri",Age:20,Branch:"Comp",Address:{city:"pune",state:"MH"},Hobbies:["Singing","Cricket"]},
+{Rollno:2,Name:"abc",Age:15,Branch:"Mech",Address:{city:"Nashik",state:"MH"},Hobbies:["Singing","Cricket"]},{Rollno:3,Name:"def",Age:23,Branch:"Comp",Address:{city:"Mumbai",state:"MH"},Hobbies:["Singing","Cricket"]},{Rollno:4,Name:"hij",Age:12,Branch:"Comp",Address:{city:"Talegaon",state:"MH"},Hobbies:["Singing","Cricket"]},{Rollno:5,Name:"pqr",Age:10,Branch:"Comp",Address:{city:"PCMC",state:"MH"},Hobbies:["Singing","Cricket"]},{Rollno:6,Name:"uvw",Age:28,Branch:"Comp",Address:{city:"pune",state:"MH"},Hobbies:["Singing","Cricket"]}]);
+
+	4. Display all students’ information.
+> db.Student.find({}).pretty();
+
+
+5. Display Student information whose age is greater than 15.
+	> db.Student.find({Age:{$gt:10}});
+
+6.Display Student information sorted on name field
+	> db.Student.find({}).sort({"Age":1});
+
+7. Update student branch Computer of RollNo3.
+> db.Student.update({Rollno:2},{$set:{"Branch":"Comp"}});
+
+
+
+
+
+8. Remove document with RollNo 1
+	> db.Student.remove({"Rollno":1});
+WriteResult({ "nRemoved" : 1 })
+
+9. Display Student information whose name starts with A
+> db.Student.find({"Name":/^a/});
+{ "_id" : ObjectId("5d7f2a920051a207c53793dc"), "Rollno" : 2, "Name" : "abc", "Age" : 15, "Branch" : "Comp", "Address" : { "city" : "Nashik", "state" : "MH" }, "Hobbies" : [ "Singing", "Cricket" ] }
+
+10. Display the total numbers of documents available in collection.
+	> db.Student.find({}).count();
+
+	11. Display only first 5 documents.
+db.Student.find().limit(5).pretty();
+
+12. Display all documents instead of first 3.
+db.Student.find().skip(3).pretty();
+
+13. Display the name of Students who live in Pune City.
+> db.Student.find({"Address.city":"pune"});
+
+14. Display the list of different cities from where students are coming.
+> db.movie.distinct('producer.address');
+[ "pune", "nashik", "delhi", "mumbai", "konkan" ]
+
+to display lenth of array
+> db.movie.distinct('producer.address').length;
+5
+15. Display the list of different cities with number of students from belonging to that city.
+
+> db.movie.aggregate([{$group:{_id:'$producer.address',total_count:{$sum:1}}}])
+{ "_id" : "konkan", "total_count" : 1 }
+{ "_id" : "mumbai", "total_count" : 1 }
+{ "_id" : "delhi", "total_count" : 1 }
+{ "_id" : "nashik", "total_count" : 2 }
+{ "_id" : "pune", "total_count" : 1 }
+
+> db.movie.aggregate([{$match:{type:'horror'}},{$group:{_id:'$producer.address',total_count:{$sum:1}}}])
+{ "_id" : "konkan", "total_count" : 1 }
+{ "_id" : "mumbai", "total_count" : 1 }
+{ "_id" : "delhi", "total_count" : 1 }
+{ "_id" : "nashik", "total_count" : 2 }
+{ "_id" : "pune", "total_count" : 1 }
+
+> db.movie.aggregate([{$match:{type:'horror'}},{$group:{_id:'$producer.address',total_count:{$sum:1}}},{$sort:{total_count:-1}}])
+{ "_id" : "nashik", "total_count" : 2 }
+{ "_id" : "konkan", "total_count" : 1 }
+{ "_id" : "mumbai", "total_count" : 1 }
+{ "_id" : "delhi", "total_count" : 1 }
+{ "_id" : "pune", "total_count" : 1 }
+
+16. Display only Name of all students.
+
+> db.movie.find({},{_id:0,'name':1}).pretty();
+{ "name" : "movie1" }
+{ "name" : "movie2" }
+{ "name" : "movie3" }
+{ "name" : "movie4" }
+{ "name" : "movie5" }
+{ "name" : "movie6" }
+
+17. Display the hobbies of each student.
+
+db.students.find({},{roll:1,hobbies:1,_id:0});
+
+18. Drop Collection
+
+
+
+ 
+
+
+
+Chit 16
+Perform aggregation and Indexing using mongodb on below database
+1. Create a database department
+2. Create a collection as teacher with fields as name , department ,experience and salary
+3. Display the department wise average salary.
+4. Display the no. Of employees working in each department.
+5. Display the department wise minimum salary.
+6. Apply index and drop index
+
+
+
+1. Create a database department
+
+> db.createCollection("Depat");
+
+2. Create a collection as teacher with fields as name , department ,experience and salary
+
+> db.Dept.insert({name:'gauri',department:'comp',exp:2,salary:2000});
+
+> db.Dept.insert({name:'Sakshi',department:'comp',exp:3,salary:3000});
+
+> db.Dept.insert({name:'vaibhavi',department:'Mech',exp:7,salary:7000});
+
+> db.Dept.insert({name:'sancho',department:'civil',exp:5,salary:9000});
+
+
+3. Display the department wise average salary.
+
+> db.Dept.aggregate([{$group:{_id:'$department',avg:{$avg:'$salary'}}}]);
+{ "_id" : "civil", "avg" : 9000 }
+{ "_id" : "Mech", "avg" : 7000 }
+{ "_id" : "comp", "avg" : 2500 }
+
+4. Display the no. Of employees working in each department.
+
+> db.Dept.aggregate([{$group:{_id:'$department',total_count:{$sum:1}}}]);
+{ "_id" : "civil", "total_count" : 1 }
+{ "_id" : "Mech", "total_count" : 1 }
+{ "_id" : "comp", "total_count" : 2 }
+5. Display the department wise minimum salary.
+
+> db.Dept.aggregate([{$group:{_id:'$department',min_sal:{$min:'$salary'}}}]);
+{ "_id" : "civil", "min_sal" : 9000 }
+{ "_id" : "Mech", "min_sal" : 7000 }
+{ "_id" : "comp", "min_sal" : 2000 }
+
+6. Apply index and drop index
+
+
+
+
+Chit 17
+Collection “city “ which contains the documents given as below format(Perform on Mongo Terminal)
+{ city:”pune”,
+type:”urban”,
+state:”MH”,
+population:”5600000”
+}
+INSERT MORE THAN 10 DOCUMENTS HAVING ABOVE FORMAT
+-using mapreduce, find statewise population
+-using mapreduce, find citywise population
+-using mapreduce, find typewise population.
+-using mapreduce , find citywise count.
+using mapreduce , find statewise count.
+
+-using mapreduce, find statewise population
+> var m=function(){emit(this.state,this.pop);}
+> var r=function(k,v){return k,Array.sum(v);}
+> db.City.mapReduce(m,r,'total_pop');
+{
+	"result" : "total_pop",
+	"timeMillis" : 47,
+	"counts" : {
+		"input" : 3,
+		"emit" : 3,
+		"reduce" : 1,
+		"output" : 1
+	},
+	"ok" : 1
+}
+> db.total_pop.find();
+{ "_id" : "MH", "value" : 300 }
+
+
+-using mapreduce, find citywise population
+> var m=function(){emit(this.city,this.pop);}
+> var r=function(k,v){return k,Array.sum(v);}
+> db.City.mapReduce(m,r,'total_pop');
+{
+	"result" : "total_pop",
+	"timeMillis" : 4,
+	"counts" : {
+		"input" : 4,
+		"emit" : 4,
+		"reduce" : 1,
+		"output" : 3
+	},
+	"ok" : 1
+}
+> db.total_pop.find();
+{ "_id" : "mumbai", "value" : 250 }
+{ "_id" : "pune", "value" : 100 }
+{ "_id" : "talegaon", "value" : 50 }
+
+-using mapreduce, find typewise population.
+> var m=function(){emit(this.type,this.pop)};
+> var r=function(k,v){return k,Array.sum(v);}
+> db.City.mapReduce(m,r,'total_pop');
+{
+	"result" : "total_pop",
+	"timeMillis" : 4,
+	"counts" : {
+		"input" : 4,
+		"emit" : 4,
+		"reduce" : 1,
+		"output" : 2
+	},
+	"ok" : 1
+}
+> db.total_pop.find();
+{ "_id" : "rural", "value" : 50 }
+{ "_id" : "urban", "value" : 350 }
+
+-using mapreduce , find citywise count.
+
+`> var m=function(){emit(this.city,this.count)};
+> var r=function(k,v){count=0;for(i=0;i<v.length;i++) count++; return count;};
+> db.City.mapReduce(m,r,'total_pop');
+{
+	"result" : "total_pop",
+	"timeMillis" : 5,
+	"counts" : {
+		"input" : 4,
+		"emit" : 4,
+		"reduce" : 1,
+		"output" : 3
+	},
+	"ok" : 1
+}
+> db.total_pop.find();
+{ "_id" : "mumbai", "value" : 2 }
+{ "_id" : "pune", "value" : null }
+{ "_id" : "talegaon", "value" : null }
+> 
+
+using mapreduce , find statewise count.
+
+> var m=function(){emit(this.state,this.count)};
+> var r=function(k,v){count=0;for(i=0;i<v.length;i++) count++; return count;};
+> db.City.mapReduce(m,r,'total_pop');
+{
+	"result" : "total_pop",
+	"timeMillis" : 5,
+	"counts" : {
+		"input" : 4,
+		"emit" : 4,
+		"reduce" : 1,
+		"output" : 1
+	},
+	"ok" : 1
+}
+> db.total_pop.find();
+{ "_id" : "MH", "value" : 4 }
+> 
+
+
+
+
+Chit 18
+Use MySQL Create Employee table, Project table and add rows shown below
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1. Find different locations from where employees belong to?
+2. What is maximum and minimum salary?
+3. Display the content of employee table according to the ascending order of salary amount.
+4. Find the name of employee who lived in Nasik or Pune city.
+5. Find the name of employees who does not get commission.
+6. Change the city of Amit to Nashik.
+7. Find the information of employees whose name starts with “A”.
+8. Find the count of staff from Mumbai.
+9. Find the count of staff from each city
+10. Find the address from where employees are belonging as well as where projects are going on.
+11. Find city wise minimum salary.
+12. Find city wise maximum salary having maximum salary greater than 26000
+13. Delete the employee who is having salary greater than 30,000.
+
+
+
+
+mysql> create table employee(eid int primary key,ename varchar(20),address varchar(20),salary int,commision int);
+\Query OK, 0 rows affected (0.25 sec)
+
+
+mysql> desc employee;
++-----------+-------------+------+-----+---------+-------+
+| Field     | Type        | Null | Key | Default | Extra |
++-----------+-------------+------+-----+---------+-------+
+| eid       | int(11)     | NO   | PRI | NULL    |       |
+| ename     | varchar(20) | YES  |     | NULL    |       |
+| address   | varchar(20) | YES  |     | NULL    |       |
+| salary    | int(11)     | YES  |     | NULL    |       |
+| commision | int(11)     | YES  |     | NULL    |       |
++-----------+-------------+------+-----+---------+-------+
+5 rows in set (0.00 sec)
+mysql> create table project(prno int(10) primary key,addr varchar(50));
+Query OK, 0 rows affected (0.22 sec)
+
+mysql> desc project;
++-------+-------------+------+-----+---------+-------+
+| Field | Type        | Null | Key | Default | Extra |
++-------+-------------+------+-----+---------+-------+
+| prno  | int(10)     | NO   | PRI | NULL    |       |
+| addr  | varchar(50) | YES  |     | NULL    |       |
++-------+-------------+------+-----+---------+-------+
+2 rows in set (0.00 sec)
+mysql> insert into employee values(1,"amit","pune",3500,5000);
+Query OK, 1 row affected (0.03 sec)
+
+mysql> insert into employee values(1,"amit","pune",3500,5000);
+ERROR 1062 (23000): Duplicate entry '1' for key 'PRIMARY'
+mysql> insert into employee(eid,ename,address,salary) values(2,"sneha","pune",4500);
+Query OK, 1 row affected (0.04 sec)
+
+mysql> insert into employee(eid,ename,address,salary) values(4,"aditi","mumbai",4500);
+Query OK, 1 row affected (0.04 sec)
+mysql> insert into employee values(3,"yadrucha","pune",5500,700);
+Query OK, 1 row affected (0.04 sec)
+
+
+mysql> insert into project values(1,"pune");
+Query OK, 1 row affected (0.04 sec)
+mysql> insert into project values(1,"pune");
+Query OK, 1 row affected (0.04 sec)
+
+mysql> insert into project values(2,"mumbai");
+Query OK, 1 row affected (0.03 sec)
+
+mysql> insert into project values(3,"pusad");
+Query OK, 1 row affected (0.05 sec)
+
+mysql> select * from project;
++------+--------+
+| prno | addr   |
++------+--------+
+|    1 | pune   |
+|    2 | mumbai |
+|    3 | pusad  |
++------+--------+
+3 rows in set (0.00 sec)
+
+mysql> select * from employee;
++-----+----------+---------+--------+-----------+
+| eid | ename    | address | salary | commision |
++-----+----------+---------+--------+-----------+
+|   1 | amit     | pune    |   3500 |      5000 |
+|   2 | sneha    | pune    |   4500 |      NULL |
+|   3 | yadrucha | pune    |   5500 |       700 |
+|   4 | aditi    | mumbai  |   4500 |      NULL |
++-----+----------+---------+--------+-----------+
+4 rows in set (0.00 sec)
+
+
+
+1. Find different locations from where employees belong to?
+mysql> select address from employee group by(address);
++---------+
+| address |
++---------+
+| mumbai  |
+| pune    |
++---------+
+2 rows in set (0.00 sec)
+
+
+2. What is maximum and minimum salary?
+
+mysql> select max(salary) from employee;
++-------------+
+| max(salary) |
++-------------+
+|        5500 |
++-------------+
+1 row in set (0.02 sec)
+
+mysql> select min(salary) from employee;
++-------------+
+| min(salary) |
++-------------+
+|        3500 |
++-------------+
+1 row in set (0.00 sec)
+
+
+3. Display the content of employee table according to the ascending order of salary amount.
+
+mysql> select * from employee order by(salary);
++-----+----------+---------+--------+-----------+
+| eid | ename    | address | salary | commision |
++-----+----------+---------+--------+-----------+
+|   1 | amit     | pune    |   3500 |      5000 |
+|   2 | sneha    | pune    |   4500 |      NULL |
+|   4 | aditi    | mumbai  |   4500 |      NULL |
+|   3 | yadrucha | pune    |   5500 |       700 |
++-----+----------+---------+--------+-----------+
+4 rows in set (0.00 sec)
+
+
+4. Find the name of employee who lived in Nasik or Pune city.
+mysql> select ename from employee where address="pune" or address="nasik";
++----------+
+| ename    |
++----------+
+| amit     |
+| sneha    |
+| yadrucha |
++----------+
+
+
+
+5. Find the name of employees who does not get commission.
+mysql> select ename from employee where commision is NULL;
++-------+
+| ename |
++-------+
+| sneha |
+| aditi |
++-------+
+2 rows in set (0.00 sec)
+
+
+6. Change the city of Amit to Nashik.
+mysql> update employee set address='nasik' where ename='amit';
+Query OK, 1 row affected (0.04 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+mysql> select * from employee;
++-----+----------+---------+--------+-----------+
+| eid | ename    | address | salary | commision |
++-----+----------+---------+--------+-----------+
+|   1 | amit     | nasik   |   3500 |      5000 |
+|   2 | sneha    | pune    |   4500 |      NULL |
+|   3 | yadrucha | pune    |   5500 |       700 |
+|   4 | aditi    | mumbai  |   4500 |      NULL |
++-----+----------+---------+--------+-----------+
+4 rows in set (0.00 sec)
+
+
+7. Find the information of employees whose name starts with „A‟.
+
+mysql> select * from employee where ename like 'a%';
++-----+-------+---------+--------+-----------+
+| eid | ename | address | salary | commision |
++-----+-------+---------+--------+-----------+
+|   1 | amit  | nasik   |   3500 |      5000 |
+|   4 | aditi | mumbai  |   4500 |      NULL |
++-----+-------+---------+--------+-----------+
+2 rows in set (0.50 sec)
+
+
+8. Find the count of staff from Mumbai.
+mysql> select count(*) from employee where address="mumbai";'
++----------+
+| count(*) |
++----------+
+|        1 |
++----------+
+1 row in set (0.00 sec)
+
+
+
+
+9. Find the count of staff from each city
+mysql> select count(*),address from employee group by(address);
++----------+---------+
+| count(*) | address |
++----------+---------+
+|        1 | mumbai  |
+|        1 | nasik   |
+|        2 | pune    |
++----------+---------+
+3 rows in set (0.00 sec)
+
+
+
+10. Find the address from where employees are belonging as well as where projects are going on.
+
+mysql> select distinct(address) from employee e,project p where p.addr=e.address;
++---------+
+| address |
++---------+
+| pune    |
+| mumbai  |
++---------+
+2 rows in set (0.00 sec)
+
+
+
+11. Find city wise minimum salary.
+
+mysql> select address,min(salary) from employee group by(address);
++---------+-------------+
+| address | min(salary) |
++---------+-------------+
+| mumbai  |        4500 |
+| nasik   |        3500 |
+| pune    |        4500 |
++---------+-------------+
+3 rows in set (0.00 sec)
+
+
+12. Find city wise maximum salary having maximum salary greater than 26000
+mysql> select address,max(salary) from employee where salary>2600 group by(address) 
+
+
+13. Delete the employee who is having salary greater than 30,000
+
+mysql> insert into employee values(5,"yadrucha","pune",30000047,700);
+
+
+mysql> delete from employee where salary>30000;
+
+
+
+
+Chit 19
+Use MySQL
+Create a table emp with following fields and constraints
+Eno –(Constraint:- primary key and apply sequence starts with 101) ,Ename –(Constraint :- not null)
+Address ––(Constraint :-default „Nashik‟) ,Joindate,
+After table creation add field - Post in the emp table.
+Insert some data in emp table.Create Index on Ename field of employee table.
+Create View on employee table to show only Ename and Salary.
+
+mysql> create table emp(Eno integer primary key auto_increment,Ename varchar(20) not null,Address varchar(20) default 'Nashik',Joindate date);
+Query OK, 0 rows affected (0.73 sec)
+
+mysql> desc emp;
++----------+-------------+------+-----+---------+----------------+
+| Field    | Type        | Null | Key | Default | Extra          |
++----------+-------------+------+-----+---------+----------------+
+| Eno      | int(11)     | NO   | PRI | NULL    | auto_increment |
+| Ename    | varchar(20) | NO   |     | NULL    |                |
+| Address  | varchar(20) | YES  |     | Nashik  |                |
+| Joindate | date        | YES  |     | NULL    |                |
++----------+-------------+------+-----+---------+----------------+
+4 rows in set (0.00 sec)
+
+After table creation add field - Post in the emp table.
+mysql> alter table emp add post varchar(20);
+Query OK, 0 rows affected (0.39 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+Insert some data in emp table.
+mysql> insert into emp(Ename,Address,JoinDate,post) values('Gauri','pune','19-09-1999','abc');
+Query OK, 1 row affected, 1 warning (0.03 sec)
+mysql> insert into emp(Ename,Address,JoinDate,post) values('sakshi','pune','19-09-1999','pqr');
+Query OK, 1 row affected, 1 warning (0.03 sec)
+
+mysql> insert into emp(Ename,Address,JoinDate,post) values('kalyani','pune','19-09-1999','xyz');
+Query OK, 1 row affected, 1 warning (0.52 sec)
+
+Create Index on Ename field of employee table.
+mysql> create index i1 on emp(Ename);
+Query OK, 0 rows affected (0.22 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+Create View on employee table to show only Ename and Salary.
+
+mysql> create view v1 as select Ename,Eno from emp;
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> select * from v1;
++---------+-----+
+| Ename   | Eno |
++---------+-----+
+| a       | 101 |
+| Gauri   | 102 |
+| kalyani | 104 |
+| sakshi  | 103 |
++---------+-----+
+4 rows in set (0.00 sec)
+
+
+
+Chit 20
+Use MongoDB
+Indexing
+1. Create Collection
+2. Insert some Documents
+3. Create Single Index,
+4. Create Compound Index,
+5. Create Unique on Collection
+6. Show Index Information
+7. Remove Index
+Aggregation
+Collection creation Student and insert following data in that:
+Rollno:1,name:'Navin',subject:'DMSA',marks:78
+Rollno:2,name:'anusha',subject:'OSD',marks:75
+Rollno:3,name:'ravi',subject:'TOC',marks:69
+Rollno:4,name:'veena',subject:'TOC',marks:70
+Rollno:5,name:„Pravini',subject:„OSD',marks:80
+Rollno:6,name: „Reena',subject: „DMSA',marks:50
+Rollno:7,name:„Geeta',subject:„CN',marks:90
+Rollno:8,name:„Akash',subject:„CN',marks:85
+1. Write aggregate function to find Max marks of Each Subject.
+2. Write aggregate function to find Min marks of Each Subject.
+3. Write aggregate function to find Sum of marks of Each Subject.
+4. Write aggregate function to find Avg marks of Each Subject.
+5. Write aggregate function to find first record Each Subject.
+6. Write aggregate function to find Last record of Each Subject.
+7. Write aggregate function to find count number of records of each subject
+8. Write aggregate function to find count number of records of each subject
+
+
+3. Create Single Index,
+
+> db.Teachers.createIndex({Tname:1});;
+4. Create Compound Index,
+
+> db.Teachers.createIndex({Tname:1,Salary:1});
+
+5. Create Unique on Collection
+> db.Teachers.createIndex({Tname:1},{unique:true});;
+{
+	"createdCollectionAutomatically" : false,
+	"numIndexesBefore" : 3,
+	"numIndexesAfter" : 4,
+	"ok" : 1
+}
+
+6. Show Index Information
+
+> db.Teachers.getIndexes();
+
+7. Remove Index
+> db.Teachers.dropIndex({Tname:1},{unique:true});
+
+Aggregation
+Collection creation Student and insert following data in that:
+Rollno:1,name:'Navin',subject:'DMSA',marks:78
+Rollno:2,name:'anusha',subject:'OSD',marks:75
+Rollno:3,name:'ravi',subject:'TOC',marks:69
+Rollno:4,name:'veena',subject:'TOC',marks:70
+Rollno:5,name:„Pravini',subject:„OSD',marks:80
+Rollno:6,name: „Reena',subject: „DMSA',marks:50
+Rollno:7,name:„Geeta',subject:„CN',marks:90
+Rollno:8,name:„Akash',subject:„CN',marks:85
+1. Write aggregate function to find Max marks of Each Subject.
+2. Write aggregate function to find Min marks of Each Subject.
+3. Write aggregate function to find Sum of marks of Each Subject.
+4. Write aggregate function to find Avg marks of Each Subject.
+5. Write aggregate function to find first record Each Subject.
+6. Write aggregate function to find Last record of Each Subject.
+7. Write aggregate function to find count number of records of each subject
+8. Write aggregate function to find count number of records of each subject
+
+
+Chit 25:
+Account(Acc_no, branch_name,balance)
+branch(branch_name,branch_city,assets)
+customer(cust_name,cust_street,cust_city)
+Depositor(cust_name,acc_no)
+Loan(loan_no,branch_name,amount)
+Borrower(cust_name,loan_no)
+Solve following query:
+Create above tables with appropriate constraints like primary key, foreign key, check constrains, not
+null etc.
+Q1. Find the names of all branches in loan relation.
+Q2. Find all loan numbers for loans made at Akurdi Branch with loan amount > 12000.
+Q3. Find all customers who have a loan from bank. Find their names,loan_no and loan amount.
+Q4. List all customers in alphabetical order who have loan from Akurdi branch.
+Q5. Find all customers who have an account or loan or both at bank.
+Q6. Find average account balance at Akurdi branch.
+Q7. Find the average account balance at each branch
+Q8. Find no. of depositors at each branch.
+Q9. Find the branches where average account balance > 12000.
+Q10. Find number of tuples in customer relation.
+Q11. Delete all loans with loan amount between 1300 and 1500.
+
+Account(Acc_no, branch_name,balance)
+branch(branch_name,branch_city,assets)
+customer(cust_name,cust_street,cust_city)
+Depositor(cust_name,acc_no)
+Loan(loan_no,branch_name,amount)
+Borrower(cust_name,loan_no)
+
+
+
+mysql> select * from depositor;                                              
+| custname | Accno |
++----------+-------+
+| Gauri    |     1 |
+| vaish    |     2 |
++----------+-------+
+2 rows in set (0.00 sec)
+
+mysql> select * from Borrower;                                                
+| custname | loanno |
++----------+--------+
+| vaish    |    102 |
+| Gauri    |    101 |
+| Gauri    |    101 |
++----------+--------+
+3 rows in set (0.00 sec)
+
+
+mysql> select * from Account;
++-------+------------+------+
+| Accno | branchname | bal  |
++-------+------------+------+
+|     1 | A          |   10 |
+|     2 | A          |   10 |
+|     3 | A          |   10 |
+|     4 | B          |   10 |
++-------+------------+------+
+4 rows in set (0.00 sec)
+
+mysql> select * from Branch;
++------------+------------+--------+
+| branchname | branchcity | assest |
++------------+------------+--------+
+| A          | Nigdi      | abc    |
+| B          | Ravet      | abc    |
+| C          | Pune       | abc    |
++------------+------------+--------+
+3 rows in set (0.00 sec)
+
+mysql> select * from Cust;
++----------+------------+----------+
+| custname | custstreet | custcity |
++----------+------------+----------+
+| Gauri    | b          | Akurd    |
+| Vaish    | b          | Akurd    |
++----------+------------+----------+
+2 rows in set (0.00 sec)
+
+mysql> select * from Loan;
++--------+------------+--------+
+| loanno | branchname | amount |
++--------+------------+--------+
+|    101 | A          |    100 |
+|    102 | B          |   1000 |
+|    103 | B          |   2000 |
+|    104 | A          |   2000 |
++--------+------------+--------+
+4 rows in set (0.00 sec)
+
+
+
+Solve following query:
+Create above tables with appropriate constraints like primary key, foreign key, check constrains, not
+null etc.
+Q1. Find the names of all branches in loan relation.
+Q2. Find all loan numbers for loans made at Akurdi Branch with loan amount > 12000.
+Q3. Find all customers who have a loan from bank. Find their names,loan_no and loan
+amount.
+Q4. List all customers in alphabetical order who have loan from Akurdi branch.
+
+mysql> select custname from Borrower,Loan where Loan.loanno=Borrower.loanno and branchname='A' order by custname desc;
++----------+
+| custname |
++----------+
+| Gauri    |
+| Gauri    |
++----------+
+2 rows in set (0.00 sec)
+
+
+
+
+Q5. Find all customers who have an account or loan or both at bank.
+mysql> select custname from depositor union distinct select custname from Borrower;
++----------+
+| custname |
++----------+
+| Gauri    |
+| vaish    |
++----------+
+2 rows in set (0.00 sec)
+
+
+Q6. Find all customers who have both account and loan at bank.
+
+mysql> select Borrower.custname from depositor,Borrower where depositor.custname=Borrower.custname;
++----------+
+| custname |
++----------+
+| Gauri    |
+| Gauri    |
+| vaish    |
++----------+
+3 rows in set (0.00 sec)
+
+Q7. Find all customer who have account but no loan at the bank.
+mysql> select depositor.custname from depositor where depositor.custname not in(select custname from Borrower);
+Empty set (0.00 sec)
+
+
+Q8. Find average account balance at Akurdi branch.
+
+mysql> select avg(bal) as 'Average' from Account where branchname='A';
++---------+
+| Average |
++---------+
+| 10.0000 |
++---------+
+1 row in set (0.00 sec)
+
+Q9. Find the average account balance at each branch
+Q10. Find no. of depositors at each branch.
+Q11. Find the branches where average account balance > 12000.
+Q12. Find number of tuples in customer relation.
+Q13. Calculate total loan amount given by bank.
+Q14. Delete all loans with loan amount between 1300 and 1500.
+Q15. Delete all tuples at every branch located in Nigdi.
+Q.16. Create synonym for customer table as cust.
+Q.17. Create sequence roll_seq and use in student table for roll_no column.
+
+
+
+
